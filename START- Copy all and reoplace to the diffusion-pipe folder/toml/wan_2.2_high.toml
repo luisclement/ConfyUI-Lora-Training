@@ -1,0 +1,80 @@
+# This configuration is for training a LoRA for Wan 2.2 on the high noise range.
+# This LoRA will focus on learning the overall composition and structure.
+
+# IMPORTANT: You will need to change these paths.
+output_dir = '/workspace/diffusion-pipe/output/high_lora'
+dataset = '/workspace/diffusion-pipe/toml/dataset.toml'
+
+
+# ============================
+# Training Settings
+# ============================
+# was original 1000 bellow
+epochs = 50
+micro_batch_size_per_gpu = 1
+pipeline_stages = 1
+gradient_accumulation_steps = 1
+gradient_clipping = 1
+# was original 10 bellow
+warmup_steps = 2
+
+# The key parameters for high noise training.
+# The `timestep_start` and `timestep_end` define the noise range.
+# A high noise model typically trains on the last portion of the diffusion process.
+timestep_start = 0.875
+timestep_end = 1.0
+
+# ============================
+# Eval Settings
+# ============================
+eval_every_n_epochs = 1
+eval_before_first_step = true
+eval_micro_batch_size_per_gpu = 1
+eval_gradient_accumulation_steps = 1
+
+# ============================
+# Misc Settings
+# ============================
+save_every_n_epochs = 5
+checkpoint_every_n_minutes = 120
+activation_checkpointing = 'unsloth'
+partition_method = 'parameters'
+save_dtype = 'bfloat16'
+caching_batch_size = 1
+steps_per_print = 1
+video_clip_mode = 'single_beginning'
+# was original 32 bellow
+blocks_to_swap = 32
+
+# ============================
+# Model
+# ============================
+[model]
+type = 'wan'
+ckpt_path = '/workspace/models/wan22/t2v-a14b'
+# Path to your base Wan 2.2 model checkpoint.
+transformer_path = '/workspace/models/wan22/t2v-a14b/high_noise_model'
+vae_path = '/workspace/models/wan22/t2v-a14b/high_noise_model/Wan2.1_VAE.pth'
+##llm_path = '/workspace/models/wan22/t2v-a14b/high_noise_model/google/umt5-xxl/tokenizer.json'
+clip_path = '/workspace/models/wan22/t2v-a14b/high_noise_model/models_t5_umt5-xxl-enc-bf16.pth'
+dtype = 'bfloat16'
+transformer_dtype = 'float8'
+timestep_sample_method = 'logit_normal'
+
+# ============================
+# Adapter
+# ============================
+[adapter]
+type = 'lora'
+rank = 32
+dtype = 'bfloat16'
+
+# ============================
+# Optimizer
+# ============================
+[optimizer]
+type = 'AdamW8bitKahan'
+lr = 2e-5
+betas = [0.9, 0.99]
+weight_decay = 0.01
+stabilize = false
