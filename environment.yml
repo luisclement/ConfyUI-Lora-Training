@@ -1,0 +1,15 @@
+name: diffpipe
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - jupyter
+  - jupyterlab
+  - jupyter-server-proxy
+  - ipywidgets=8.1.7
+  - tensorboard
+  - huggingface_hub
+  - pip
+  - pip:
+    - -r /tmp/requirements.txt
+    - flash-attn==2.8.1 --no-build-isolation
