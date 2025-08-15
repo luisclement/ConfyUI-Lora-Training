@@ -12,4 +12,4 @@ dependencies:
   - pip
   - pip:
     - -r /tmp/requirements.txt
-    - flash-attn==2.8.1 --no-build-isolation
+    - flash-attn==2.8.1
