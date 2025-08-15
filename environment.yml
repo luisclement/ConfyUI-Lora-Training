@@ -1,0 +1,21 @@
+name: diffpipe
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pytorch=2.7.0
+  - torchvision=0.22.0
+  - torchaudio=2.7.0
+  - pytorch-cuda=12.8
+  - jupyter
+  - jupyterlab
+  - jupyter-server-proxy
+  - ipywidgets=8.1.7
+  - tensorboard
+  - huggingface_hub
+  - pip
+  - pip:
+    - -r /tmp/requirements.txt
+    - flash-attn==2.8.1 --no-build-isolation

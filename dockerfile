@@ -1,26 +1,35 @@
-# --- 1. Start from GPU-ready PyTorch base image ---
-FROM pytorch/pytorch:2.3.0-cuda12.1-cudnn8-runtime
+# syntax=docker/dockerfile:1.7-labs
+FROM nvidia/cuda:12.8.0-devel-ubuntu22.04
 
-# Install basic system utilities
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        git curl wget unzip nano vim openssh-server && \
-    rm -rf /var/lib/apt/lists/*
+ARG DEBIAN_FRONTEND=noninteractive
+SHELL ["/bin/bash", "-lc"]
 
-# --- 2. Copy in application code from local folder (from your good pre-NVIDIA-install version) ---
-WORKDIR /app
-COPY . /app
+# --- OS deps ---
+RUN apt-get update && apt-get install -y --no-install-recommends         wget curl git git-lfs ca-certificates build-essential pkg-config         ffmpeg libgl1 libglib2.0-0 tini aria2         && rm -rf /var/lib/apt/lists/* && git lfs install
 
-# --- 3. Install Python dependencies ---
-# Replace with your actual requirements file from the working image
-RUN pip install --upgrade pip && \
-    pip install -r /app/requirements.txt
+# --- Micromamba (no ToS), Python 3.12 ---
+ARG MAMBA_ROOT_PREFIX=/opt/micromamba
+ENV MAMBA_ROOT_PREFIX=/opt/micromamba
+RUN curl -L https://micro.mamba.pm/api/micromamba/linux-64/latest         | tar -xvj -C /usr/local/bin --strip-components=1 bin/micromamba
 
-# --- 4. Make sure entrypoint is executable ---
-RUN chmod +x /app/scripts/entrypoint.sh
+COPY requirements.txt /tmp/requirements.txt
+COPY environment.yml /tmp/environment.yml
+RUN micromamba env create -f /tmp/environment.yml && micromamba clean -y -a
+ENV CONDA_DEFAULT_ENV=diffpipe
+ENV PATH=/opt/micromamba/envs/diffpipe/bin:/opt/micromamba/bin:${PATH}
 
-# --- 5. Ports ---
-EXPOSE 22 8888 6006
+# Helpful runtime envs
+ENV NCCL_P2P_DISABLE=0         NCCL_IB_DISABLE=1         PYTHONDONTWRITEBYTECODE=1         HF_HUB_ENABLE_HF_TRANSFER=1         TORCH_CUDA_ARCH_LIST="8.9"         NVIDIA_VISIBLE_DEVICES=all         NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
-# --- 6. Default entrypoint ---
-ENTRYPOINT ["/app/scripts/entrypoint.sh"]
+# Work dirs
+RUN mkdir -p /app /workspace/diffusion-pipe/toml /workspace/diffusion-pipe/dataset         /workspace/modelsext /workspace/output /workspace/cache
+
+# Entrypoint & helper scripts
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY scripts/ /usr/local/bin/
+COPY toml/ /workspace/diffusion-pipe/toml/
+RUN chmod +x /usr/local/bin/*.sh || true
+
+EXPOSE 8888 6006
+ENTRYPOINT ["/usr/bin/tini","--","/usr/local/bin/entrypoint.sh"]
+CMD ["bash"]
