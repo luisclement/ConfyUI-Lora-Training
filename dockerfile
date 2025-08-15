@@ -15,6 +15,9 @@ RUN curl -L https://micro.mamba.pm/api/micromamba/linux-64/latest         | tar 
 COPY requirements.txt /tmp/requirements.txt
 COPY environment.yml /tmp/environment.yml
 RUN micromamba env create -f /tmp/environment.yml && micromamba clean -y -a
+
+# --- PyTorch 2.7.0 cu128 trio (author-compatible) ---
+RUN pip install torch==2.7.0 torchvision==0.22.0 torchaudio==2.7.0 --index-url https://download.pytorch.org/whl/cu128
 ENV CONDA_DEFAULT_ENV=diffpipe
 ENV PATH=/opt/micromamba/envs/diffpipe/bin:/opt/micromamba/bin:${PATH}
 

@@ -1,14 +1,8 @@
 name: diffpipe
 channels:
-  - pytorch
-  - nvidia
   - conda-forge
 dependencies:
   - python=3.12
-  - pytorch=2.7.0
-  - torchvision=0.22.0
-  - torchaudio=2.7.0
-  - pytorch-cuda=12.8
   - jupyter
   - jupyterlab
   - jupyter-server-proxy
